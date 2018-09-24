@@ -1,0 +1,35 @@
+Media[i] = 8
+Media[i] = 10
+Media[i] = 10
+posicoes[i] = 1
+posicoes[i] = 2
+posicoes[i] = 0
+Escola 0: find_max start : 0 end: 3 num_elementos: 3
+11 - 7 - 6 - 
+maiores_count: 1
+
+menores_count: 1
+mediana: 8 =========== 
+find_max start : 0 end: 1 num_elementos: 2
+6 - 
+maiores_count: 0
+
+menores_count: 0
+mediana: 7 =========== 
+find_max start : 0 end: 0 num_elementos: 2
+
+maiores_count: 0
+
+menores_count: 0
+mediana: 6 =========== 
+find_max start : 0 end: -1 num_elementos: 2
+
+maiores_count: 0
+
+menores_count: 0
+mediana: 0 =========== 
+find_max start : 0 end: -1 num_elementos: 2
+
+maiores_count: 0
+
+menores_count: 0

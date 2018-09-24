@@ -1,0 +1,6 @@
+set r1,0x4005
+set r2,0x3B89
+add r2,r2
+add r2,r2
+add r2,r2
+add r2,r2

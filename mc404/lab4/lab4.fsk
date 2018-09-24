@@ -1,0 +1,96 @@
+; Nome: Vinícius Andrade Frederico
+; Turma: B
+; RA: 139223
+
+; constantes
+     CR       .equ 0x0d  ; carriage return
+     LF       .equ 0x0a  ; line feed
+     SYSREAD  .equ 0x03
+     SYSWRITE .equ 0x04
+     BUFSIZE  .equ 40    ; tamanho do buffer
+     .org 100h
+	 
+
+main:
+     set sp, 10000h       ; prepara pilha
+	 set r3, 0		;contador de bits 1
+	 
+; escreve pedindo mensagem
+	 set r0, message2-message1 ; carrega numero de bytes
+	 set r1, message1 ; carrega endereco da mensagem
+	 sys SYSWRITE
+	 
+; le de stdin a mensagem
+     set r0, BUFSIZE      ; numero maximo de bytes a ler
+     set r1, buffer       ; endereco do buffer
+     sys SYSREAD
+     mov r5,r0            ; salva numero de bytes efetivamente lidos em r5
+
+; Explicação do código abaixo: Para cada caractere, à partir do final (posicao buffer + r5 -1), seu valor será carregado no registrador r1 e, usando shr enquanto r1 != 0, será pego um bit dele. Esse bit será colocado em um registrador zerado (r2) usando rcl, e o valor de r2 será somado ao contador de bits 1 (r3). Como bit 0 = decimal 0 e bit 1 = decimal 1, a soma irá somente aumentar o valor de r3 qdo o bit for 1.
+rodaCaractere:
+	 set r4, buffer ; carrega o endereco do buffer
+     add r4, r5 ; soma a posicao ao endereco do buffer
+	 sub r4, 1 ; volta um caractere da string (correção pois os caracteres começam na posição 0)
+	 ldb r1, (r4) ; carrega o byte do caractere em r1
+
+conta:
+	 shr r1, 1 ; pega o bit menos significativo e joga no carry
+	 set r2, 0 ; zera o registrador r2
+	 rcl r2, 1 ; coloca o bit do carry no registrador r2
+	 add r3, r2 ; soma o valor de r2 ao contador
+	 
+	 cmp r1, 0 ; compara r1 e 0
+	 jg conta ; r1 > 0? se sim, ainda há bits != 0, logo, repete
+	 
+	 ; se não há mais bits em r1 != 0:
+	 sub r5, 1 ; subtrai um da posicao do caractere a ser lido da string (pula pro próximo caractere)
+	 jnz rodaCaractere ; se não foi lido todos os caracteres, pula para rodar o próximo caractere
+
+; Explicação do código abaixo: Tendo a quantidade de bits 1 na mensagem, será subtraido 2 do valor da contagem, enquanto o contador (r3) for maior que 1. Dessa forma, ao término do loop, o valor de r3 será: 1 caso a quantidade de bits 1 seja ímpar ou 0 caso seja par.
+subtraiContador:
+	 sub r3, 2 ; subtrai 2 de r3
+	 cmp r3, 1 ; compara r3 e 1
+	 jg subtraiContador ; r3 > 1? se sim, repete
+
+; pede bit de paridade
+	 set r0, erro-message2 ; carrega numero de bytes
+	 set r1, message2 ; carrega endereco da mensagem
+	 sys SYSWRITE
+	 
+; le de stdin o bit de paridade
+     set r0, BUFSIZE      ; numero maximo de bytes a ler
+     set r1, buffer       ; endereco do buffer
+     sys SYSREAD
+
+; Explicação do código abaixo: Carrega-se o valor do bit de paridade no registrador r1. Como o caractere 0 e 1 são respectivamente 30h e 31h, subtrai-se 30h para obter os valores numéricos de 0 e 1. Logo, teremos r1 = 0 ou 1 sendo o bit de paridade, e r3 sendo 0 se a quantidade de bits 1 é par ou 1 se ímpar. 
+     ldb r1, (buffer) ; carrega o byte do caractere lido para o bit de paridade
+	 sub r1, 30h ; passa de caractere para inteiro
+
+; Explicação do código abaixo: Como a relação entre r1 e r3 deve ser r1 = r3 para que esteja correta a mensagem lida (r1 = 0 se a qtde de bits 1 deveria ser par, ou seja, r3 = 0, o mesmo para o caso ímpar), se a subtração r3 - r1 for igual a zero, ambos tinham o mesmo valor, logo a mensagem recebida estava correta, caso contrário, ocorreu erro de paridade.	 
+	 sub r1, r3 ; subtrai r3 de r1
+	 jnz msgErro ; se r1 - r3 != 0; r3 != r1, portanto ocorreu erro, logo pula para imprimir a mensagem de erro de paridade
+
+; caso contrário (r1 - r3=0); r3 = r1, portanto a paridade está correta e será impressa a mensagem de OK
+msgOK:
+	 set r0, buffer-ok ; carrega numero de bytes
+	 set r1, ok ; carrega endereco da mensagem
+	 sys SYSWRITE
+	 hlt
+	 
+msgErro:
+	 set r0, ok-erro ; carrega numero de bytes
+	 set r1, erro ; carrega endereco da mensagem
+	 sys SYSWRITE
+	 hlt
+
+
+message1:
+     .db 'Digite uma mensagem:', CR,LF
+message2:
+     .db 'Bit de Paridade:', CR,LF
+erro:
+     .db 'ERRO DE PARIDADE', CR,LF
+ok:
+     .db 'OK', CR,LF
+buffer:
+     .ds BUFSIZE

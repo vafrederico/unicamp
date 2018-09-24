@@ -1,0 +1,165 @@
+; enderecos de dispositivos
+    DISPLAY1_V .equ 70h    ; 
+    DISPLAY2_V .equ 71h
+	DISPLAY1_P .equ 72h
+	DISPLAY2_P .equ 73h
+	BOTAO  .equ 10h    ; 
+    INT_BOTAO    .equ 8h ; interrupção do botao
+    LEDVERDE     .equ 20h
+	LEDAMARELO     .equ 21h
+	LEDVERMELHO    .equ 22h
+	TIMER	.equ 30h
+    INT_TIMER    .equ 0x12 ; interrupção do temporizador
+	
+; constantes
+     CR       .equ 0x0d  ; carriage return
+     LF       .equ 0x0a  ; line feed
+     SYSREAD  .equ 0x03
+     SYSWRITE .equ 0x04
+     BUFSIZE  .equ 40    ; tamanho do buffer
+     .org 100h
+
+	 
+main:
+	 set sp, 10000h       ; prepara pilha
+	 ; r4 = botao 0 apertado, 1 não apertado
+	 ; r5 = led verde
+	 ; r6 = led amarelo
+	 ; r7 = led vermelho
+	 ; r8 = veiculo aberto? 1: aberto pra veiculo, 0: aberto pra pedestre
+	 ; r9 = tick
+	 ; r10 = tempo pedestre
+	 ; r11 = sentido pedestre
+	 ; r12 = tempo veiculo
+	 ; r13 = cor veiculo 0 verde, 1 amarelo, 2 vermelho
+	 set   r0,INT_TIMER*4  ; posição no vetor de interrupções
+     set   r1,int_tempo    ; endereço do tratador
+     st    (r0),r1         ; instala tratador no vetor
+	 set   r0,INT_BOTAO*4  ; posição no vetor de interrupções
+     set   r1,int_botao    ; endereço do tratador
+     st    (r0),r1         ; instala tratador no vetor
+	 set r9, 0
+	 set r0, 0
+	 sti
+	 
+	 set   r0,1000        ; programa timer para interromper
+     out   TIMER,r0  ; a cada segundo
+	 
+	 set r5, 2				; led verde pra veículo fica aceso e o verde pra pedestre apagado
+	 set r6, 0				; led amarelo fica apagado
+	 set r7, 1				; led vermelho pra veículo fica apagado e aceso pra pedestre
+	 set r12, 8				; tempo de contagem regressiva do led para veículos é 8 segundos
+	 set r10, 10			; tempo de contagem regressiva do led para pedestre é 10 segundos
+	 set r13, 0				; farol para veículos está verde
+	 set r8, 1				; farol para veículo está aberto
+	 jmp atualiza			; entra no loop
+	 
+loopTimer:
+	 cmp r4, 0
+	 set r4, 0				; botão está apertado
+	 jnz veiculoVerde
+	 
+	 cmp r9, 0				; se zerou, continua no loop
+	 jz loopTimer
+	 
+	 set r9, 0
+	 
+	 sub r10, 1				; subtrai 1 dos contador
+	 sub r12, 1				; subtrai 1 dos contador
+	 jnz atualiza
+	 
+	 ; ação ao rodar o timer
+	 cmp r8, 0				; se estiver aberto pra pedestre, pula pra pedestreAberto
+	 jz pedestreAberto
+
+veiculoAberto:
+	 cmp r13, 1
+	 jl veiculoVerde
+	 
+veiculoAmarelo:
+	 set r8, 0				; vai ficar vermelho para veículos, logo, estará aberto para pedestre
+	 set r10, 10			; contador do tempo de pedestre volta para 10 segundos (vai ficar verde)
+	 set r12, 10			; contador do tempo de veículos volta para 10 segundos (vai ficar vermelho)
+	 set r13, 2				; farol para veículo fica vermelho
+	 set r5, 1				; led verde apenas para pedestre
+	 set r6, 0				; led amarelo apaga
+	 set r7, 2 				; 2 dec = 10 bin => led ficará vermelho apenas para carro
+	 jmp atualiza
+
+veiculoVerde:
+	 set r13, 1				; farol para veículo fica vermelho
+	 set r10, 2				; garante que o contado de tempo para pedestre ainda está 2 segundos
+	 set r12, 2				; contador do tempo de veículos vai para 2 segundos (vai ficar amarelo)
+	 set r5, 0				; leds verdes ficam apagados
+	 set r6, 1				; led amarelo fica aceso
+	 set r7, 1				; led para pedestre continua vermelho
+	 jmp atualiza
+		
+pedestreAberto:
+	 set r8, 1				; vai ficar verde veículos, logo, estará fechado para pedestre
+	 set r10, 10			; contador de tempo de pedestre volta para 10 segundos (vai ficar vermelho)
+	 set r12, 8				; contador de tempo para veículos volta para 8 segundos (vai ficar verde)
+	 set r13, 0				; farol para veículo fica verde
+	 set r5, 2				; led verde apenas apenas para veículos
+	 set r6, 0				; led amarelo apagado
+	 set r7, 1				; led vermelho aceso apenas pedestres
+	
+atualiza:
+	 outb LEDVERDE, r5		; atualiza o painel de acordo com o estado do led ( 2 dec = 10 bin => led ficará aceso apenas para carro, 1 dec = 01 bin => led ficará aceso apenas para pedestre)
+	 outb LEDAMARELO, r6	; atualiza o painel de acordo com o estado do led
+	 outb LEDVERMELHO, r7	; atualiza o painel de acordo com o estado do led
+	
+	 cmp r12, 10
+	 jl veiculo1Digito
+	 
+	 ldb r0, digitos+1		; carrega o valor a ser mostrado no display
+	 ldb r1, digitos
+	 jmp atualizaVeiculo
+
+veiculo1Digito:
+	 ldb r0, digitos		; carrega o valor a ser mostrado no display para veículos
+	 set r1, digitos
+	 add r1, r12
+	 ldb r1, (r1)
+	 
+atualizaVeiculo:			; Mostra e atualiza os novos números no display do farol
+	 outb DISPLAY1_V, r1
+	 outb DISPLAY2_V, r0
+
+;;; PEDESTRE ATUALIZA
+	 cmp r10, 10			; compara se o tempo de pedestre ainda está 10, se estiver, significa que mudou e tem que atualizar (ou seja, não pula), se não, muda tempo em pedestre
+	 jl pedestre1Digito
+	 
+	 ldb r0, digitos+1		;carrega valores a serem atualizados
+	 ldb r1, digitos
+	 jmp atualizaPedestre
+
+pedestre1Digito:			
+	 ldb r0, digitos		; carrega novos digitos a serem mostrados
+	 set r1, digitos
+	 add r1, r10			; o tempo a ser mostrado em r1 é o tempo que está salvo no registrador usado para guardar seu tempo (o r10)
+	 ldb r1, (r1)
+atualizaPedestre:
+	 
+	 outb DISPLAY1_P, r1	; Mostra e atualizar os novos números no display do pedestre
+	 outb DISPLAY2_P, r0
+	 
+	 jmp loopTimer
+
+; tratador da interrupção do temporizador
+int_tempo:
+     set   r9,1         	; indica que ocorreu interrupção
+     iret               	; e retorna
+
+int_botao:
+	 cmp r13, 0				; se o farol está verde, o botão funciona e o farol vai pro amarelo
+	 jg intret
+	 set r4, 1 				; botão apertado
+intret:
+	 iret
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; DIGITOS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+digitoVazio:
+	 .db 0
+digitos:
+	 .db 07eh,030h,06dh,079h,033h,05bh,05fh,070h,07fh,07bh
+	 

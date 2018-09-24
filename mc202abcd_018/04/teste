@@ -1,0 +1,12 @@
+#!/bin/bash
+FOLDER_TEST="testes"
+SOURCE='set_inplace'
+gcc -g -o $SOURCE $SOURCE.c
+for i in `seq 1 5`;
+do
+	echo -e "Teste $i: "
+	./$SOURCE < "$FOLDER_TEST/arq$i.in" >| "$FOLDER_TEST/arq$i.out"
+	diff "$FOLDER_TEST/arq$i.res" "$FOLDER_TEST/arq$i.out" | tee "$FOLDER_TEST/arq$i.diff"
+	echo " ----------------------------------- "
+done
+

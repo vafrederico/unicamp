@@ -1,0 +1,216 @@
+package br.unicamp.ic.mc302.contador;
+
+// arquivo Contador.java
+public class Contador{ 
+    private int num; // valor do contador
+    public void incrementa ( ) { 
+        num = num +1; }
+    public void decrementa ( ) {
+        num = num -1; }
+    public void comeca(int n) {
+        num = n; }
+    public int retornaNum( ) { 
+        return this.num; } // this  é uma referencia para o objeto corrente
+} // fim da classe Contador 
+
+
+package br.unicamp.ic.mc302.contador;
+
+// Arquivo ContadorVogais.java
+public class ContadorVogais {
+
+    public static void main(String args[]) {
+	    char fraseExaminada[] = {'T','e','x','t','o',' ','E','x','e','m','p','l','o',' ','P','a','r','a',' ','A',' ','C','o','n','t','a','g','e','m',' ','D','o',' ','N','u','m','e','r','o',' ','D','e',' ','V','o','g','a','i','s','.'};
+		Contador[] contVogais = new Contador[5]; // um para cada vogal
+	    
+	    for(int i = 0; i< fraseExaminada.length; i++){
+	    	// analisar cada índice do vetor de caracteres fraseExaminada[i] e, se for o caso, incrementar o contador da respectiva vogal
+	    }
+    }
+} // Fim da classe ContadorVogais
+
+
+// arquivo ExemploContador.java
+package br.unicamp.ic.mc302.contador;
+
+class ExemploContador{
+    static public void  main (String args[ ]) {
+        Contador umCont;
+        umCont = new Contador( ); // alocação dinâmica de memória
+        umCont.comeca(0); 
+        System.out.println(umCont.retornaNum()); 
+        umCont.incrementa( );
+        System.out.println(umCont.retornaNum());
+    }
+} // fim da classe Principal
+
+
+package br.unicamp.ic.mc302.circulo;
+
+// arquivo Circulo.java
+public class Circulo {
+	private int x, y;
+	private int raio;
+
+	public static final double PI = 3.14159;
+
+	public Circulo (int x1, int y1, int raio) {
+		x = x1;
+		y = y1;
+		this.raio = raio;
+	}
+	public int getX () {
+		return x;
+	}
+	public int getY () {
+		return y;
+	}
+	public int getRaio () {
+		return raio;
+	}
+	public double circunferencia() {
+		return 2 * PI * raio;
+	}
+
+} // Fim da classe Circulo
+
+
+package br.unicamp.ic.mc302.circulo;
+
+// arquivo TestaCirculo.java
+class TestaCirculo {
+    public static void main (String args[ ]) {
+
+    	Circulo c1, c2, c3;
+    	c1 = new Circulo(3, 3, 1);
+    	c2 = new Circulo(2, 1, 4);
+    	c3 = c1; // mesmo objeto!
+
+    	System.out.println("c1: (" + c1.getX() + ", " + c1.getY() + ")");
+    	System.out.println("c2: (" + c2.getX() + ", " + c2.getY() + ")");
+       	System.out.println("c3: (" + c3.getX() + ", " + c3.getY() + ")");
+   	
+    	int circ = (int) c1.circunferencia();
+    	System.out.print("Raio de c1: " + c1.getRaio());
+    	System.out.println("; Circunferência de c1: "+ circ);
+    }
+
+} // Fim da classe TestaCirculo
+
+
+package br.unicamp.ic.mc302.listaInts;
+/*
+ * Uma classe para demonstrar o uso de listas parametrizadas (ArrayList) em Java
+ * concentrando no uso da estrutura de laço "for each".
+ */
+
+import java.util.ArrayList;
+
+public class ListaInts {
+    ArrayList<Integer> lista;
+
+    // Constructor
+    ListaInts() {
+        lista = new ArrayList<Integer>();
+    }
+
+    // método de adição de elementos para o ArrayList
+    // Outros métodos podem ser adicionados de maneira similar
+    void add(Integer n) {
+        lista.add(n);
+    }
+
+    // n é um elemento da lista?
+    Boolean elem(Integer n) {
+        for (Integer x: lista) {
+            if (x.equals(n)) return true;
+        }
+        return false;
+    }
+
+    // Soma dos elementos da lista
+    Integer sum() {
+        Integer total = 0;
+        for (Integer x: lista) {
+            total = total + x;
+        }
+        return total;
+    }
+
+    // Encontra o menor elemento da lista
+    // A lista precisa ter pelo menos um elemento
+    Integer minimum() {
+        // mantém o menor elemento encontrado na lista
+        // Inicializa com o primeiro elemento da lista.
+        Integer smallestSoFar = lista.get(0);
+        for (Integer x: lista) {
+            if (x < smallestSoFar)
+                smallestSoFar = x;
+        }
+        return smallestSoFar;
+    }
+
+    // Uma outra versão, utilizando laços padrões.
+    Integer minimum_version2() {
+        Integer smallestSoFar = lista.get(0);
+        for (int index = 1; index < lista.size(); index++) {
+            if (lista.get(index) < smallestSoFar)
+                smallestSoFar = lista.get(index);
+        }
+        return smallestSoFar;
+    }
+
+    // cria uma representação textual da lista.
+    public String toString() {
+    	StringBuilder s = new StringBuilder(); 		// Creates an empty string builder with default capacity (16 empty elements).
+    	s.append("[");					// Appends the argument to this string builder.	
+    	for (Integer x:lista) {
+    		s.append(x);  				// The data is converted to a string before the append operation takes place. 
+    		s.append(", ");
+    	}
+    	int i = s.length();
+    	if (i > 1) {
+    		s.replace(i-2, i-1, "]");		// Replaces the specified character(s) in this string builder.
+    	}
+    	else s.append("]");
+        return s.toString();                   		// Returns a string that contains the character sequence in the builder.
+    }
+
+
+} // Fim da classe ListLints
+
+
+package br.unicamp.ic.mc302.listaInts;
+
+/*
+ * Uma classe simples para testar a classe ListaInts
+ */
+
+class TestaLista {
+    public static void main (String [] args) {
+        ListaInts list1 = new ListaInts();
+        ListaInts list2 = new ListaInts();
+
+        list1.add(9);
+        list1.add(8);
+        list1.add(7);
+        list1.add(6);
+        list1.add(5);
+        list1.add(4);
+        list1.add(3);
+        list1.add(2);
+        list1.add(1);
+        list1.add(0);
+
+        System.out.println("3 pertende à list1? "      + list1.elem(3));
+        System.out.println("42 está na list1? "        + list1.elem(42));
+        System.out.println("3 está na list2 (vazia)? " + list2.elem(3));
+
+        System.out.println("Soma dos elementos da list1: " + list1.sum());
+        System.out.println("Soma dos elementos da list2: " + list2.sum());
+        
+        System.out.println("list1: " + list1.toString());
+        System.out.println("list2: " + list2.toString());
+
+    }
+}

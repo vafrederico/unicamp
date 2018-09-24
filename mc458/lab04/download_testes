@@ -1,0 +1,11 @@
+#!/bin/bash
+FOLDER_TEST="testes"
+DISCIPLINA="mc458abcd"
+LAB="04"
+for i in `seq 1 20`;
+do
+	echo -e "Teste $i: "
+	curl "https://susy.ic.unicamp.br:9999/$DISCIPLINA/$LAB/dados/arq$i.in" --insecure > "$FOLDER_TEST/arq$i.in"
+	curl "https://susy.ic.unicamp.br:9999/$DISCIPLINA/$LAB/dados/arq$i.res" --insecure > "$FOLDER_TEST/arq$i.res"
+	echo " ----------------------------------- "
+done

@@ -1,0 +1,10 @@
+#!/bin/bash
+FOLDER_TEST="testes"
+for i in `seq 1 20`;
+do
+	echo -e "Teste $i: "
+	./lab < "$FOLDER_TEST/arq$i.in" > "$FOLDER_TEST/arq$i.out"
+	diff "$FOLDER_TEST/arq$i.res" "$FOLDER_TEST/arq$i.out" | tee "$FOLDER_TEST/arq$i.diff"
+	echo " ----------------------------------- "
+done
+

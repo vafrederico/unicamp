@@ -1,0 +1,3 @@
+set r3,0xffffffff
+set r2,0x1
+add r3,r2

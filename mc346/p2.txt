@@ -1,0 +1,19 @@
+1)
+decodifica j = concat(map (\x -> (replicate (snd x) (fst x))) j)
+
+2)
+import Data.List(maximumBy)
+import Data.Function(on)
+somaTupla x = fst x + snd x
+maiorDupla lista = maximumBy (compare `on` somaTupla) lista
+
+3)
+returnFirst x = [head x]
+count x = length . filter (x==)
+digitos s = 
+	let z = map returnFirst (words s)
+	in [map (\x -> show(count x z)) ["1","2", "3", "4","5","6","7","8","9"]]
+
+4) 
+amostra lista i = if i <= (length lista) then amostra' i (length lista) lista (i-1) else []
+amostra' skip size lista i = [lista!!i] ++ (if (i+skip) < size then (amostra' skip size lista (i+skip)) else [])

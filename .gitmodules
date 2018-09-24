@@ -1,0 +1,9 @@
+[submodule "mc102-013"]
+	path = mc102-013
+	url = https://github.com/vafrederico/mc102-013
+[submodule "mc202"]
+	path = mc202
+	url = https://github.com/vafrederico/mc202
+[submodule "mc202bc_014"]
+	path = mc202bc_014
+	url = https://github.com/vafrederico/mc202bc_014

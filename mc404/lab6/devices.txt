@@ -1,0 +1,20 @@
+# arquivo de configuração de dispositivos para o simulador jfm
+
+%7segdisplays Display
+#port
+0x73
+0x72
+0x71
+0x70
+
+%leds On/Off
+# color num_leds port
+red 1 0x20
+
+%buttons Comando
+#name port int type
+Abre/Fecha 0x10 0x08 T
+
+%keyboard Teclado
+#dataport statusport int
+0x40 0x41 0

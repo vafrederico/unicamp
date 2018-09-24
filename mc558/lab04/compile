@@ -1,0 +1,2 @@
+#!/bin/sh
+g++ lab4.cpp -o lab -g -ansi -pedantic -Wall -lm

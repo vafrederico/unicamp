@@ -1,0 +1,3 @@
+set r1,0x5
+add r1,0x4
+sub r1,0xFF; flags SCN

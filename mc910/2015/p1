@@ -1,0 +1,63 @@
+1) S -> S ^ S | S \/ S |  (S) | p | q  => terminais = { ^, \/, p, q, (,)}
+a) mostrar S é ambígua
+q^q ^ q 
+
+	S
+S	^		S
+q		   /         \
+		S	^	S
+		q		q
+
+b) enconrta g' equivalente não ambígua
+S-> P ^ S
+S-> P V S
+P -> (S)
+P -> p
+P -> q
+
+2) S -> cAa
+A ->cB
+A->B
+B->bcB
+B-> E
+LL(1)? first + (a->w) = first (w) U follow(A) - {E} se E em First(W)
+ first + (a->w) = first (w) se !(E em First(W))
+First S -> {c}	FOLLOW  =  $
+First A - > c, b, E 	FOLLOW = a
+FIRST B -> b, E		FOLLOW = a
+	a	b	c	$
+S			1
+A	3	3	2
+B	5	4
+
+3) R -> RR
+| R+R
+| R*
+|(R)
+|a
+|b
+|E
+Eliminar recursão a esquerda
+R->(R)R'
+|aR'
+|bR'
+|ER'
+R'->RR'
+|+RR'
+|*R'
+|E
+
+5) S -> E$
+E-> E+T
+E->T
+T->T*F
+T->F
+F->id
+F->(E)
+LR(0)?
+SLr?
+
+S-> X
+X-> y | id
+y-> id
+LR(0)?

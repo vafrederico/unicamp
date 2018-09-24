@@ -1,0 +1,10 @@
+.org 100h
+set r1, 000ah
+set r2, 000ch
+add r1,r2
+shr r1, 1
+
+set r1, 777ah
+set r2, 777dh
+add r1,r2
+shr r1, 1

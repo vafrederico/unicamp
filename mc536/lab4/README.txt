@@ -1,0 +1,2 @@
+O arquivos comandos-RA136253-RA139223.sql possui os comandos utilizados no banco de dados para criação do banco de dados e preparação dele (inserção do tipo bloqueio de id 1, que é usado no import.php).
+O arquivo import.php faz a importação dos arquivos xml para o banco de dados. Para executá-lo, basta usar php import.php.

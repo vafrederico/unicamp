@@ -1,0 +1,86 @@
+; Nome: Vinícius Andrade Frederico
+; Turma: B
+; RA: 139223
+
+; constantes
+     CR       .equ 0x0d  ; carriage return
+     LF       .equ 0x0a  ; line feed
+     SYSREAD  .equ 0x03
+     SYSWRITE .equ 0x04
+     BUFSIZE  .equ 40    ; tamanho do buffer
+     .org 100h
+	 
+main:
+     set sp, 10000h       ; prepara pilha
+	 
+	 ; escreve a mensagem para digitar os valores
+	 set r0, message2-message1
+	 set r1, message1
+	 sys SYSWRITE
+	 
+	 ; lê da entrada
+     set r0, BUFSIZE      ; numero maximo de bytes a ler
+     set r1, buffer       ; endereco do buffer
+     sys SYSREAD
+	 
+	 ; carrega em r1 e r2 os valores lidos
+	 set r1, buffer
+	 set r2, buffer+5
+	 set r3, resultado
+	  
+	 ; chama o procedimento
+	 call calculaMedia
+	 
+	 ; imprime a mensagem de média
+	 set r0, buffer-message2
+	 set r1, message2
+	 sys SYSWRITE
+	 
+	 ; imprimwe a média
+	 set r0, 4 ; só queremos os 4 primeiros bytes pois são o resultado
+	 set r1, resultado
+	 sys SYSWRITE
+	 
+	 hlt
+
+; RECEBE OS ENDEREÇOS DE MÉMÓRIA DOS VALORES NOS REGISTRADORES R1 E R2, O ENDEREÇO DE MEMÓRIA PRA SALVAR O RESULTADO EM R3 E RETORNA O RESULTADO NO ENDEREÇO EM R3
+calculaMedia:
+	; salva os endereços dos valores em r4 e r5
+	 mov r4, r1 
+	 mov r5, r2
+	; contador de bytes já com média feita
+	 set r6, 0
+rodaLoopMedia:
+	; carrega valores em r1 e r2 dos bytes a serem feitos a média
+	 mov r1, r4
+	 add r1, r6
+	 ldb r1, (r1)
+	 mov r2, r5
+	 add r2, r6
+	 ldb r2, (r2)
+	 
+	 ;faz a média com soma e shr
+	 add r1, r2
+	 shr r1, 1
+	 
+	 ; salva a média na memória
+	 stb (r3), r1
+	 ; incrementa o endereço da memória onde será salvo o próximo byte de média
+	 add r3, 1
+	 
+	 ; incrementa contador de bytes já feitos a média e compara para ver se precisa executar mais vezes
+	 add r6, 1
+	 cmp r6, 3
+	 jle rodaLoopMedia
+	 
+	 ; retorna do procedimento
+	 ret
+	 
+message1:
+     .db 'Digite os valores:', CR,LF
+message2:
+     .db 'Media: '
+buffer:
+     .ds BUFSIZE
+resultado:
+	 .ds 4

@@ -1,0 +1,26 @@
+# arquivo de configuração de dispositivos para o simulador jfm
+
+%7segdisplays DisplayPedestre
+#port
+0x73
+0x72
+
+%7segdisplays DisplayVeiculo
+0x71
+0x70
+
+%leds Verde(Veiculo/Pedestre)
+# color num_leds port
+green 2 0x20
+%leds Amarelo(Veiculo)
+yellow 1 0x21
+%leds Vermelho(Veiculo/Pedestre)
+red 2 0x22
+
+%buttons Comando
+#name port int type
+PedestreFecha 0x10 0x08 P
+
+%timer timer
+# parâmetros dataport int
+0x30 0x12

@@ -1,0 +1,7 @@
+%timer
+# port  int_type
+0x90008 0x07
+
+%mixedleds Genius
+# color_list port
+rgyb 0x90000

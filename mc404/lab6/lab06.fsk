@@ -1,0 +1,257 @@
+; enderecos de dispositivos
+    DISPLAY1 .equ 70h    ; 
+    DISPLAY2 .equ 71h
+	DISPLAY3 .equ 72h
+	DISPLAY4 .equ 73h
+	TOGGLE  .equ 10h    ; 
+    LED     .equ 20h
+	KB_DATA	.equ 40h
+	KB_STATUS	.equ 41h
+	ASTERISCO .equ 0ah
+	
+; constantes
+     CR       .equ 0x0d  ; carriage return
+     LF       .equ 0x0a  ; line feed
+     SYSREAD  .equ 0x03
+     SYSWRITE .equ 0x04
+     BUFSIZE  .equ 40    ; tamanho do buffer
+     .org 100h
+
+	 
+main:
+	 set sp, 10000h       ; prepara pilha
+	 ; r9 a r12 = valor nos displays
+	 ; r8 = estado porta  0: aberto 1: fechado
+	 ; r7 = estado senha 0: aberto 1: fechado
+	 ; r6 = estado toggle para checagem
+	 ; r2 a r5 = senha
+	 ; r13 = 1
+	 set r13, 1
+	 set r2, -1 	; ainda não tem senha, por isso = -1
+	 set r3, -1 	; ainda não tem senha, por isso = -1
+	 set r4, -1 	; ainda não tem senha, por isso = -1
+	 set r5, -1 	; ainda não tem senha, por isso = -1
+	 set r6, 0 		; ainda sem estado
+	 set r7, 0 		; ainda não há senha
+	 set r8, 0		; porta ainda está aberta
+	 call limpaDisplay		;garante que o display não tenha nada mostrando
+loop:
+	 inb r0     , TOGGLE      	; Liga/desliga verifica estado
+	 xor r0,r6
+	 jz continua			; Começa a colocar a senha, caso não tenha apertado o '*', continua até ele ser pressionado 
+	 call togglePressionado
+continua:
+	 inb r0, KB_STATUS      ; status teclado
+	 test r0,r13
+	 jz loop
+	 inb r0, KB_DATA      ; Lê dado do teclado
+	 call tecladoPressionado
+	 jmp loop
+	 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; RETORNA ;;;;;;;;;;;;;;;;;;;;;;;;;;;;      
+retorna:					;Função que é usada para retornar quando não acontece nada
+	 ret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TECLADO ;;;;;;;;;;;;;;;;;;;;;;;;;;;;      
+tecladoPressionado:
+	 set r1, ASTERISCO
+	 sub r0, r1 					; SE ASTERISCO FOI PRESSIONADO, r0 - ASTERISCO = 0
+	 jnz numeroPressionado
+	 
+	 mov r2, r9						; move os números do display para os registradores que guardarão a senha
+	 mov r3, r10					; move os números do display para os registradores que guardarão a senha
+	 mov r4, r11					; move os números do display para os registradores que guardarão a senha
+	 mov r5, r12					; move os números do display para os registradores que guardarão a senha
+	 set r7, 1						; Agora há senha -> estado de senha = 1
+	 
+	 call piscaDisplay				; pisca o número escolhido duas vezes
+	 call piscaDisplay
+	 call delay				
+	 
+	 call mostraLocd				; mostra que está travado "LOCd" e aguarda um pouco
+	 call delay
+	 call delay
+	 
+	 call limpaDisplay				; limpa display
+	 call acendeLed					; acende led indicando que tá travado
+	 
+	 ret
+	 
+numeroPressionado:
+	 add r0, r1
+	 
+	 call deslocaEsquerda			; sempre que é pressionado um número, eles são deslocados para a esquerda
+	 mov r9, r0
+	 call atualizaDisplay			; escreve o último digito
+	 
+	 cmp r5, 0 						; NÃO HÁ SENHA SALVA, NADA A FAZER
+	 jl saiTeclado
+	 
+	 cmp r12, 0 					; NÃO FORAM DIGITADOS OS QUATRO DIGITOS, NADA A FAZER
+	 jl saiTeclado
+	 
+	 test r7, r13					; ESTÁ TRAVADO
+	 jz saiTeclado
+	 
+									; SE SENHA CERTA, SUBTRAÇÃO 0, SENÃO, A SENHA ESTÁ CORRETA
+	 sub r9, r2
+	 jnz senhaErrada
+	 sub r10, r3
+	 jnz senhaErrada
+	 sub r11, r4
+	 jnz senhaErrada
+	 sub r12, r5
+	 jnz senhaErrada
+	 
+	 set r7, 0						; Com a senha correta, o estado do cofre é aberto
+	 call mostraOpen				; Mostra a palavra OPEn na tela
+	 call piscaDisplay				; pisca o display 2 vezes
+	 call piscaDisplay
+	 
+senhaErrada:							; Caso a senha esteja errada, limpa-se o display e sai do teclado
+	 call limpaDisplay
+	 jmp saiTeclado
+	 
+saiTeclado:								; apenas retorna quando sai do teclado
+	 ret
+	 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; TOGGLE ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+togglePressionado:
+	 test r6, r13 					; TOGGLE TÁ 1?
+	 jz toggle1						; SE SIM, MUDA PRA 0, SE NÃO, PULA PRA MUDAR PRA 1.
+toogle0:
+	 set r6, 0						; Toggle não pressionado
+	 jmp verificaPorta
+toggle1:
+	 set r6, 1						; Toggle pressionado
+
+verificaPorta:
+	 test r7, r13					; SENHA TA TRANCADA, NÃO FAZ NADA O BOTÃO
+	 jnz saiToggle
+	 
+	 test r8, r13 					; PORTA TA FECHADA, SE SIM, ABRE E APAGA LED, SE NÃO, FECHA E ACENDE
+	 jz portaFecha
+	 
+portaAbre:
+	 cmp r5, 0 						; PORTA ABERTA SEM SENHA SALVA, ERRO
+	 jl mostraErro
+	 
+	 set r8, 0						; Estado da porta muda para aberto
+	 call apagaLed
+	 ret
+portaFecha:
+	 set r8, 1						; Estado da prota muda para fechado
+	 cmp r5, 0
+	 jl saiToggle					; Se tiver um dígito no dígito menos significativo do display, sai do Toggle
+	 call acendeLed
+	 cmp r5, 0
+	 jl saiToggle
+	 set r7, 1						; Estado da senha muda para com senha.
+saiToggle:
+	 ret
+
+mostraErro:								; Mostra erro piscando 4 vezes
+	 set r9, digitosErro-digitos+2
+	 set r10, digitosErro-digitos+1
+	 set r11, digitosErro-digitos+1
+	 set r12, digitosErro-digitos
+	 call atualizaDisplay
+	 call piscaDisplay
+	 call piscaDisplay
+	 call piscaDisplay
+	 call piscaDisplay
+	 jmp main
+	 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; AÇÕES DISPLAY ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+delay:								; Roda um loop para esperar um tempo
+	 set r1, 1200000
+loopDelay:
+	 sub r1, 1
+	 jnz loopDelay
+	 ret
+
+piscaDisplay:						; Mostra todos em todos os display o valor de 0, ou seja, sem nada.
+	 call delay
+	 set r0, 0
+	 outb DISPLAY1, r0
+	 outb DISPLAY2, r0
+	 outb DISPLAY3, r0
+	 outb DISPLAY4, r0
+	 call delay
+	 call atualizaDisplay
+	 ret
+
+limpaDisplay:						; Limpa o display
+	 set r9, -1
+	 set r10, -1
+	 set r11, -1
+	 set r12, -1
+	 call atualizaDisplay
+	 ret
+
+atualizaDisplay:					; Coloca no display os valores que devem ser mostrados
+	 set r1, digitos
+	 add r1, r9
+	 ldb r1, (r1)
+	 outb DISPLAY1, r1
+	 set r1, digitos
+	 add r1, r10
+	 ldb r1, (r1)
+	 outb DISPLAY2, r1
+	 set r1, digitos
+	 add r1, r11
+	 ldb r1, (r1)
+	 outb DISPLAY3, r1
+	 set r1, digitos
+	 add r1, r12
+	 ldb r1, (r1)
+	 outb DISPLAY4, r1
+	 ret
+	 
+deslocaEsquerda:					; Move os registradores para deslocar para esquerda
+	 mov r12, r11
+	 mov r11, r10
+	 mov r10, r9
+	 set r9, -1
+	 call atualizaDisplay
+	 ret
+
+mostraLocd:							; Mostra LOCd na tela
+	 set r9, digitosLocd-digitos+3
+	 set r10, digitosLocd-digitos+2
+	 set r11, digitosLocd-digitos+1
+	 set r12, digitosLocd-digitos
+	 call atualizaDisplay
+	 ret
+	 
+mostraOpen:							; Mostra OPEn na tela
+	 set r9, digitosOpen-digitos+3
+	 set r10, digitosOpen-digitos+2
+	 set r11, digitosOpen-digitos+1
+	 set r12, digitosOpen-digitos
+	 call atualizaDisplay
+	 ret
+	 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; AÇÕES LED ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+apagaLed:							; Muda estado do LED para apagado
+	 set r8, 0
+	 outb LED, r8
+	 ret
+
+acendeLed:							; Muda estado do LED para aceso
+	 set r8, 1
+	 outb LED, r8
+	 ret
+	 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; DIGITOS ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+digitoVazio:
+	 .db 0
+digitos:
+	 .db 07eh,030h,06dh,079h,033h,05bh,05fh,070h,07fh,07bh
+digitosLocd:
+	 .db 0eh, 07eh, 4eh, 3dh ; L O C d
+digitosOpen:
+	 .db 07eh, 67h, 4fh, 15h; O P E n
+digitosErro:
+	 .db 4fh, 5h, 1dh; E r o
+	 

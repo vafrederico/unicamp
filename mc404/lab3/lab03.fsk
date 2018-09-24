@@ -1,0 +1,62 @@
+; Nome: Vinícius Andrade Frederico
+; Turma: B
+; RA: 139223
+
+; constantes
+     CR       .equ 0x0d  ; carriage return
+     LF       .equ 0x0a  ; line feed
+     SYSREAD  .equ 0x03
+     SYSWRITE .equ 0x04
+     BUFSIZE  .equ 40    ; tamanho do buffer
+     .org 100h
+	 
+
+main:
+     set sp, 10000h       ; prepara pilha
+
+; escreve mensagem inicial
+     set r0, message2-message1 ; numero de bytes a escrever
+     set r1, message1        ; endereco da mensagem inicial
+     sys SYSWRITE
+
+; le de stdin
+     set r0, BUFSIZE      ; numero maximo de bytes a ler
+     set r1, buffer       ; endereco do buffer
+     sys SYSREAD
+     st pos,r0            ; salva numero de bytes efetivamente lidos
+	
+
+; imprime mensagem de string invertida
+	 set r0, novalinha-message2 ; carrega numero de bytes
+	 set r1, message2 ; carrega endereco da mensagem
+	 sys SYSWRITE
+
+escreve: ; escreve caractere, o caractere sera o endereco do buffer mais a posicao do caracter na string
+     set r0, 1 ; escreve somente um byte
+	 ld r2, pos	; carrega a posicao da string a escrever
+	 set r1, buffer ; carrega o endereco do buffer
+     add r1, r2 ; soma a posicao ao endereco do buffer
+	 sub r1, 1 ; volta um caractere da string
+	 sys SYSWRITE ; escreve
+	 sub r2, 1 ; subtrai um da posicao 
+	 st pos, r2 ; salva a posicao
+	 
+	 jnz escreve ; volta para escreve caso ainda haja caractere a imprimir (loop)
+	 
+	 ; escreve CRLF
+	 set r0, buffer-novalinha ; carrega o tamanho
+	 set r1, novalinha ; carrega o endereço
+	 sys SYSWRITE ; escreve
+	 
+     hlt ; termino do programa
+
+message1:
+     .db 'Digite uma string', CR,LF
+message2:
+     .db 'String invertida:', CR,LF
+novalinha:
+     .db CR,LF
+buffer:
+     .ds BUFSIZE
+pos:
+	 .ds 1
