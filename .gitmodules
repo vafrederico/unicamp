@@ -7,3 +7,9 @@
 [submodule "mc202bc_014"]
 	path = mc202bc_014
 	url = https://github.com/vafrederico/mc202bc_014
+[submodule "mc504/mc504-sudoku"]
+	path = mc504/mc504-sudoku
+	url = https://github.com/vafrederico/mc504-sudoku
+[submodule "mc504/mc504-animacao"]
+	path = mc504/mc504-animacao
+	url = https://github.com/vafrederico/mc504-animacao
